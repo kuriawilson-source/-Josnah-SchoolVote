@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ election.name }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'dashboard' %}">← All elections</a>
+<section class="page-heading heading-row">
+  <div><span class="eyebrow">ELECTION SETUP</span><h1>{{ election.name }}</h1><p>{{ election.description|default:"Manage positions, candidates, and voting status." }}</p></div>
+  <span class="badge large {{ election.status }}">{{ election.get_status_display }}</span>
+</section>
+<section class="stats-grid compact">
+  <article class="stat-card"><span class="stat-icon green">◫</span><div><span class="stat-label">Positions</span><strong>{{ positions|length }}</strong></div></article>
+  <article class="stat-card"><span class="stat-icon blue">✓</span><div><span class="stat-label">Voter turnout</span><strong>{{ turnout }}<small> / {{ eligible_count }}</small></strong></div></article>
+  <article class="stat-card"><span class="stat-icon gold">◷</span><div><span class="stat-label">Voting status</span><strong class="status-text">{{ election.get_status_display }}</strong></div></article>
+</section>
+<section class="section-heading"><div><span class="eyebrow">BALLOT DESIGN</span><h2>Positions &amp; candidates</h2></div></section>
+<div class="positions-grid">
+  {% for position in positions %}
+    <article class="card position-card">
+      <div class="position-heading"><div><span class="position-number">0{{ forloop.counter }}</span><h3>{{ position.name }}</h3></div><span class="count-pill">{{ position.active_candidate_count }} active candidate{{ position.active_candidate_count|pluralize }}</span></div>
+      <p class="muted small-space">{% if position.is_active %}{% if position.voter_grade and position.voter_stream %}Only Grade {{ position.voter_grade }} learners in {{ position.voter_stream }} can vote for this position.{% elif position.voter_stream %}Only learners in {{ position.voter_stream }} can vote for this position.{% else %}All learners can vote for this position.{% endif %}{% else %}Historical position — excluded from new ballots.{% endif %}</p>
+      {% if position.candidates.all %}
+        <ul class="candidate-list">{% for candidate in position.candidates.all %}<li>{% if candidate.passport_photo %}<img class="candidate-photo admin-candidate-photo" src="{{ candidate.passport_photo.url }}" alt="Photo of {{ candidate.name }}">{% else %}<span class="avatar">{{ candidate.name|first|upper }}</span>{% endif %}<span><strong>{{ candidate.name }}</strong>{% if candidate.slogan %}<small>{{ candidate.slogan }}</small>{% endif %}{% if not candidate.is_active %}<small class="badge closed">Disabled</small>{% endif %}</span>
+          {% if position.is_active and election.status == "draft" or position.is_active and election.status == "open" %}<span class="candidate-actions"><a class="button secondary small-button" href="{% url 'candidate-edit' candidate.pk %}">Edit</a>
+            <form method="post" action="{% url 'candidate-status' candidate.pk %}" {% if candidate.is_active %}onsubmit="return confirm('Disable {{ candidate.name|escapejs }}? Recorded votes will remain unchanged.');"{% endif %}>{% csrf_token %}<input type="hidden" name="action" value="{% if candidate.is_active %}disable{% else %}enable{% endif %}"><button class="button {% if candidate.is_active %}danger{% else %}secondary{% endif %} small-button" type="submit">{% if candidate.is_active %}Disable{% else %}Enable{% endif %}</button></form>
+          </span>{% endif %}
+        </li>{% endfor %}</ul>
+      {% else %}<p class="muted small-space">No candidates added yet.</p>{% endif %}
+      {% if position.is_active and election.status == "draft" or position.is_active and election.status == "open" %}
+        <form method="post" action="{% url 'candidate-create' position.pk %}" class="inline-form">{% csrf_token %}<input name="name" maxlength="160" placeholder="Candidate name" required aria-label="Candidate name for {{ position.name }}"><input name="slogan" maxlength="240" placeholder="Slogan (optional)" aria-label="Candidate slogan"><button class="button secondary small-button" type="submit">Add candidate</button></form>
+      {% endif %}
+    </article>
+  {% empty %}
+    <div class="card empty-inline"><span class="empty-icon">◫</span><h3>No positions yet</h3><p>Add the roles learners will vote for, such as President or Treasurer.</p></div>
+  {% endfor %}
+  {% if election.status == "draft" %}
+    <article class="card add-position-card"><h3>＋ Add a position</h3><form method="post" action="{% url 'position-create' election.pk %}">{% csrf_token %}{{ position_form.non_field_errors }}{% for field in position_form %}<label class="field">{{ field.label }}{{ field }}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</label>{% endfor %}<button class="button secondary" type="submit">Add position</button></form></article>
+  {% endif %}
+</div>
+<section class="card election-action">
+  <div><span class="eyebrow">NEXT STEP</span><h3>{% if election.status == "draft" %}Ready to open voting?{% elif election.status == "open" %}Voting is in progress{% else %}Election complete{% endif %}</h3>
+    <p>{% if election.status == "draft" %}Import learners and ensure every position has at least two candidates.{% elif election.status == "open" %}Share the voting booth link with learners: <a href="{% url 'vote' election.pk %}">{{ request.scheme }}://{{ request.get_host }}{% url 'vote' election.pk %}</a>{% else %}Results are final and ready to export.{% endif %}</p>
+  </div>
+  {% if election.status == "draft" %}<div class="button-row"><form method="post" action="{% url 'election-status' election.pk %}">{% csrf_token %}<button class="button primary" name="action" value="open">Open election →</button></form>{% if can_delete %}<form method="post" action="{% url 'election-delete' election.pk %}" onsubmit="return confirm('Permanently delete this empty election and all its positions and candidates? This cannot be undone.');">{% csrf_token %}<button class="button danger" type="submit">Delete election</button></form>{% endif %}</div>
+  {% elif election.status == "open" %}<div class="button-row"><form method="post" action="{% url 'election-status' election.pk %}" onsubmit="return confirm('Close voting now? Results will become available.');">{% csrf_token %}<button class="button danger" name="action" value="close">Close voting</button></form>{% if can_delete %}<form method="post" action="{% url 'election-delete' election.pk %}" onsubmit="return confirm('Permanently delete this election and all its positions and candidates? This can only be done if it has no voting records. This cannot be undone.');">{% csrf_token %}<button class="button danger" type="submit">Delete election</button></form>{% endif %}</div>
+  {% else %}<div class="button-row"><a class="button primary" href="{% url 'ranked-candidate-report' election.pk %}" target="_blank" rel="noopener">Print candidate vote ranking</a><a class="button secondary" href="{% url 'results-xlsx' election.pk %}">↓ Excel</a><a class="button secondary" href="{% url 'results-pdf' election.pk %}">↓ PDF</a>{% if can_delete %}<form method="post" action="{% url 'election-delete' election.pk %}" onsubmit="return confirm('Permanently delete this empty election and all its positions and candidates? This cannot be undone.');">{% csrf_token %}<button class="button danger" type="submit">Delete election</button></form>{% endif %}</div>{% endif %}
+</section>
+{% if can_show_results %}
+  <section class="section-heading"><div><span class="eyebrow">OFFICIAL RESULTS</span><h2>Votes by candidate</h2></div></section>
+  <div class="card table-card"><div class="table-scroll"><table><thead><tr><th>Position</th><th>Candidate</th><th>Votes</th><th>Share of turnout</th></tr></thead><tbody>
+  {% for position_name,candidate_name,votes,ballot_count in result_rows %}<tr><td>{{ position_name }}</td><td>{{ candidate_name }}</td><td><strong>{{ votes }}</strong></td><td>{% if ballot_count %}{% widthratio votes ballot_count 100 %}%{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No positions or votes to report.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endif %}
+{% endblock %}

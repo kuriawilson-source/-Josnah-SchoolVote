@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Edit official{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'officials' %}">← Electoral officials</a>
+<section class="page-heading"><span class="eyebrow">ACCOUNT ACCESS</span><h1>Edit official account</h1><p>Update the sign-in username for {{ official.user.username }}.</p></section>
+<form method="post" class="card form-card">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  {% for field in form %}
+    <label class="field">{{ field.label }}{{ field }}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}</label>
+  {% endfor %}
+  <div class="form-actions"><a class="button secondary" href="{% url 'officials' %}">Cancel</a><button class="button primary" type="submit">Save official</button></div>
+</form>
+{% endblock %}

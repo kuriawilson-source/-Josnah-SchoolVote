@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Choose sign in{% endblock %}
+{% block content %}
+<section class="access-page">
+  <span class="brand-mark big-mark">S<small>v</small></span>
+  <span class="eyebrow">SCHOOL ELECTIONS</span>
+  <h1>Welcome to {{ open_election.description|default:"SchoolVote" }}</h1>
+  <p>Choose the secure sign-in for your role.</p>
+  <div class="access-cards">
+    <a class="card access-card" href="{% url 'admin-login' %}">
+      <span class="stat-icon green">⚙</span><h2>Administrator</h2>
+      <p>Create elections, manage learners and officials, and publish final results.</p>
+      <span class="text-link">Admin login →</span>
+    </a>
+    <a class="card access-card" href="{% url 'official-login' %}">
+      <span class="stat-icon blue">✓</span><h2>Electoral official</h2>
+      <p>Open learner ballots and monitor turnout during voting.</p>
+      <span class="text-link">Official login →</span>
+    </a>
+  </div>
+</section>
+{% endblock %}

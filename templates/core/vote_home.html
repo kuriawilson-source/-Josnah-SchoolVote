@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Official voting{% endblock %}
+{% block content %}
+<section class="voter-intro"><span class="brand-mark big-mark">S</span><span class="eyebrow">ELECTORAL OFFICIAL</span><h1>Official voting station</h1><p>Choose the open election, then enter the learner's Admission No. to open their ballot.</p></section>
+<div class="election-picker">
+  {% for election in elections %}<a class="card election-tile" href="{% url 'vote' election.pk %}"><span class="tile-icon">✳</span><span class="badge open">Voting open</span><h2>{{ election.name }}</h2><p>{{ election.description|default:"Open this election to verify a learner and record their ballot." }}</p><span class="text-link">Open official voting →</span></a>
+  {% empty %}<div class="card empty-state"><span class="empty-icon">◷</span><h2>No open elections</h2><p>Open an election from the dashboard before starting official voting.</p><a class="button secondary" href="{% url 'dashboard' %}">Return to dashboard</a></div>{% endfor %}
+</div>
+{% endblock %}

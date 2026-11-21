@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Enter learner Admission No.{% endblock %}
+{% block content %}
+<section class="official-login-page">
+  <header class="official-commission">
+    <span class="brand-mark">S</span>
+    <div><span class="eyebrow">ELECTORAL OFFICIAL · {{ election.name }}</span><h1>Josnah Primary and Junior School Electoral Commission</h1></div>
+  </header>
+  <form method="post" class="card official-admission-form">
+    {% csrf_token %}
+    <span class="eyebrow">VOTER CHECK-IN</span>
+    <h2>Enter Admission Number</h2>
+    <p class="muted">The learner's record and ballot will open for the official to assist.</p>
+    {% for field in form %}
+      <label class="field">{{ field.label }}{{ field }}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}</label>
+    {% endfor %}
+    <button class="button primary" type="submit" name="find_student" value="1">Open learner ballot →</button>
+  </form>
+</section>
+{% endblock %}

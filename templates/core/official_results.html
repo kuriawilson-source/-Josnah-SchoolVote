@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block extra_head %}{% if election and election.status == "open" %}<meta http-equiv="refresh" content="15">{% endif %}{% endblock %}
+{% block title %}Voting progress{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div><span class="eyebrow">ELECTORAL COMMISSION</span><h1>Voting progress</h1><p>Monitor voter turnout and candidate results by position.</p></div>
+  {% if elections %}<form method="get" class="election-filter"><label for="election">Election</label><select id="election" name="election" onchange="this.form.submit()">{% for option in elections %}<option value="{{ option.pk }}" {% if election.pk == option.pk %}selected{% endif %}>{{ option.name }}</option>{% endfor %}</select></form>{% endif %}
+</section>
+{% if election %}
+  <section class="turnout-overview card">
+    <div class="turnout-header"><div><span class="eyebrow">{{ election.name }} · {{ election.get_status_display|upper }}</span><h2>Registered learners who have voted</h2></div><strong class="turnout-percent">{{ turnout_percent }}%</strong></div>
+    <div class="turnout-counts"><strong>{{ total_voted }}</strong><span>voted</span><span class="count-divider">of</span><strong>{{ total_registered }}</strong><span>registered</span></div>
+    <div class="progress-track" role="progressbar" aria-label="Overall voter turnout" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ turnout_percent }}"><span class="progress-fill" style="width: {{ turnout_percent }}%"></span></div>
+    <p class="progress-caption">{{ remaining }} learner{{ remaining|pluralize }} remaining</p>
+  </section>
+
+  <section class="section-heading"><div><span class="eyebrow">LIVE CANDIDATE RESULTS</span><h2>Candidate votes by position</h2><p>Updates automatically every 15 seconds while voting is open.</p></div></section>
+  <div class="position-charts">
+    {% for position in position_rows %}
+      <section class="card position-chart">
+        <div class="position-chart-heading">
+          <h3>{{ position.name }}</h3>
+          <span>Total votes: {{ position.total_votes }}</span>
+        </div>
+        {% if position.candidates %}
+          <div class="candidate-bars" role="img" aria-label="{{ position.name }} candidate results">
+            {% for candidate in position.candidates %}
+              <div class="candidate-bar">
+                <strong class="candidate-percent">{{ candidate.percent }}%</strong>
+                <div class="candidate-bar-track" aria-hidden="true"><span class="candidate-bar-fill" style="height: {{ candidate.percent }}%"></span></div>
+                <span class="candidate-vote-count">{{ candidate.votes }} vote{{ candidate.votes|pluralize }}</span>
+                <span class="candidate-name">{{ candidate.name }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty-chart">No candidates have been added to this position.</p>
+        {% endif %}
+      </section>
+    {% empty %}
+      <div class="card empty-state"><h2>No positions available</h2><p>An administrator must add positions and candidates to this election.</p></div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card empty-state"><span class="empty-icon">◷</span><h2>No elections available</h2><p>Ask an administrator to create an election.</p></div>
+{% endif %}
+{% endblock %}

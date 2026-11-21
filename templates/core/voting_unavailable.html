@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Voting schedule{% endblock %}
+{% block content %}
+<section class="card already-voted-card schedule-card">
+  {% if not_started %}
+    <span class="eyebrow">ELECTORAL OFFICIAL · {{ election.name }}</span>
+    <h1>Voting has not started yet</h1>
+    <p>The official voting station will open at <strong>{{ opens_at|date:"F j, Y, g:i A" }}</strong>.</p>
+  {% else %}
+    <span class="eyebrow">ELECTORAL OFFICIAL · {{ election.name }}</span>
+    <h1>Voting has closed</h1>
+    <p>The scheduled voting period ended at <strong>{{ closes_at|date:"F j, Y, g:i A" }}</strong>.</p>
+  {% endif %}
+  <a class="button secondary" href="{% url 'dashboard' %}">Return to dashboard</a>
+</section>
+{% endblock %}

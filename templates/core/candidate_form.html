@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'election-detail' candidate.position.election_id %}">← Election setup</a>
+<section class="page-heading"><span class="eyebrow">BALLOT DESIGN</span><h1>{{ title }}</h1><p>Update the candidate's name and slogan for {{ candidate.position.name }}.</p></section>
+<form method="post" enctype="multipart/form-data" class="card form-card">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  {% if candidate.passport_photo %}<div class="candidate-photo-preview"><img src="{{ candidate.passport_photo.url }}" alt="Current passport photo for {{ candidate.name }}"><span>Current passport photo</span></div>{% endif %}
+  {% for field in form %}
+    <label class="field">{{ field.label }}{{ field }}{% if field.name == "passport_photo" %}<small>Upload a JPG, PNG, or other supported image. Maximum 5 MB.</small>{% endif %}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}</label>
+  {% endfor %}
+  <div class="form-actions">
+    <button class="button danger" type="submit" form="delete-candidate" onclick="return confirm('Permanently delete {{ candidate.name|escapejs }}? Candidates with recorded votes cannot be deleted.');">Delete candidate</button>
+    <a class="button secondary" href="{% url 'election-detail' candidate.position.election_id %}">Cancel</a>
+    <button class="button primary" type="submit">Save candidate</button>
+  </div>
+</form>
+<form id="delete-candidate" method="post" action="{% url 'candidate-delete' candidate.pk %}" hidden>
+  {% csrf_token %}
+</form>
+{% endblock %}

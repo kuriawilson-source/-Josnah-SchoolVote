@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Already voted{% endblock %}
+{% block content %}
+<section class="card already-voted-card">
+  <span class="eyebrow">VOTER CHECK-IN · {{ election.name }}</span>
+  <h1>Already Voted!</h1>
+  <p>This Admission No. has already cast a vote and cannot vote a second time.</p>
+  <p class="learner-summary"><strong>{{ student.name }}</strong> · Grade: {{ student.grade }} · Stream: {{ student.stream }} · Adm: {{ student.admission_no }}</p>
+  <a class="button primary" href="{% url 'vote' election.pk %}">Return to Admission No. entry</a>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173b30">
+  <title>{% block title %}SchoolVote{% endblock %} · SchoolVote</title>
+  <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'home' %}"><span class="brand-mark">S<small>v</small></span> SchoolVote</a>
+    <nav>
+      {% if request.user.is_authenticated and request.user.is_superuser %}
+        <a href="{% url 'dashboard' %}">Admin dashboard</a>
+        <a href="{% url 'students' %}">Learners</a>
+        <a href="{% url 'officials' %}">Officials</a>
+        <a href="{% url 'admin-recovery-email' %}">Recovery email</a>
+        <a href="{% url 'admin-password-change' %}">Change password</a>
+        <a href="{% url 'vote-home' %}">Official voting</a>
+        <form method="post" action="{% url 'admin-logout' %}" class="nav-form">{% csrf_token %}<button class="nav-link" type="submit">Admin sign out</button></form>
+      {% elif request.user.is_authenticated and request.user.is_staff %}
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <a href="{% url 'students' %}">Learners</a>
+        <a href="{% url 'officials' %}">Officials</a>
+        <a href="{% url 'admin-recovery-email' %}">Recovery email</a>
+        <a href="{% url 'admin-password-change' %}">Change password</a>
+        <form method="post" action="{% url 'admin-logout' %}" class="nav-form">{% csrf_token %}<button class="nav-link" type="submit">Sign out</button></form>
+      {% elif request.user.is_authenticated and request.user.electoral_official %}
+        <a href="{% url 'vote-home' %}">Official voting</a>
+        <a href="{% url 'official-results' %}">Voting progress</a>
+        <form method="post" action="{% url 'official-logout' %}" class="nav-form">{% csrf_token %}<button class="nav-link" type="submit">Sign out</button></form>
+      {% else %}
+        <a href="{% url 'admin-login' %}">Admin login</a>
+        <a href="{% url 'official-login' %}">Official login</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="shell">
+    {% if messages %}
+      <div class="messages" aria-live="polite">
+        {% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">SchoolVote <span>·</span> Fair, private, student-led elections</footer>
+</body>
+</html>

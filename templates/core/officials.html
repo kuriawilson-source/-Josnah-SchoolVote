@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Electoral officials{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'dashboard' %}">← Admin dashboard</a>
+<section class="page-heading">
+  <span class="eyebrow">ACCOUNT ACCESS</span>
+  <h1>Electoral officials</h1>
+  <p>Create separate sign-in accounts for staff who will operate the voting station and view turnout progress.</p>
+</section>
+<div class="notice"><strong>Password reset warning:</strong> reset passwords are set to the shared default <code>12345678</code>. Share it securely with the official.</div>
+<div class="officials-grid">
+  <form method="post" class="card form-card">
+    {% csrf_token %}
+    <h2>Create official login</h2>
+    <p class="muted">Officials can access only voting and turnout progress—not learner management or election setup.</p>
+    {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}
+      <label class="field">{{ field.label }}{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}</label>
+    {% endfor %}
+    <button class="button primary" type="submit">Create official account →</button>
+  </form>
+  <section class="card table-card">
+    <div class="table-scroll"><table><thead><tr><th>Username</th><th>Account created</th><th>Actions</th></tr></thead><tbody>
+      {% for official in officials %}<tr><td><strong>{{ official.user.username }}</strong></td><td>{{ official.created_at|date:"M j, Y" }}</td><td><div class="record-actions"><a class="button secondary small-button" href="{% url 'official-edit' official.pk %}">Edit</a><form method="post" action="{% url 'official-reset-password' official.pk %}" onsubmit="return confirm('Reset this official password to 12345678?');">{% csrf_token %}<button class="button secondary small-button" type="submit">Reset password</button></form><form method="post" action="{% url 'official-delete' official.pk %}" onsubmit="return confirm('Permanently delete this official account?');">{% csrf_token %}<button class="button danger small-button" type="submit">Delete</button></form></div></td></tr>
+      {% empty %}<tr><td colspan="3">No electoral official accounts have been created yet.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

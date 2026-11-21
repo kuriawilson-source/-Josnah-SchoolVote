@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Learners{% endblock %}
+{% block content %}
+<section class="page-heading heading-row"><div><span class="eyebrow">VOTER ROLL</span><h1>Learners</h1><p>{{ total }} active learner{{ total|pluralize }} can vote in open elections.</p></div><div class="button-row"><a class="button secondary" href="{% url 'student-create' %}">＋ Add learner</a><a class="button primary" href="{% url 'student-import' %}">↑ Import learners</a></div></section>
+<form method="get" class="search-bar"><input type="search" name="q" value="{{ query }}" placeholder="Search by Admission No. or name" aria-label="Search learners">
+  {% if elections %}<select name="election" aria-label="Election participation status">{% for election in elections %}<option value="{{ election.pk }}" {% if selected_election.pk == election.pk %}selected{% endif %}>{{ election.name }} — {{ election.get_status_display }}</option>{% endfor %}</select>{% endif %}
+  <button class="button secondary" type="submit">Search</button></form>
+{% if selected_election %}<p class="table-footnote">Disabling removes a learner's eligibility for all elections. Editing or deleting is restricted if the learner voted in an open election. Closed-election participation records are retained when a learner with voting history is removed from the active roll.</p>{% endif %}
+<div class="card table-card">
+  {% if students %}
+    <div class="table-scroll"><table><thead><tr><th>Adm</th><th>Learner</th><th>Grade</th><th>Stream</th><th>Eligibility</th>{% if selected_election %}<th>Voting status</th>{% endif %}<th>Actions</th></tr></thead><tbody>
+    {% for student in students %}<tr><td class="mono">{{ student.admission_no }}</td><td><strong>{{ student.name }}</strong></td><td>{{ student.grade }}</td><td>{{ student.stream }}</td><td>{% if student.is_active %}<span class="badge active">Eligible</span>{% else %}<span class="badge closed">Disabled</span>{% endif %}</td>{% if selected_election %}<td>{% if student.has_voted %}<span class="badge closed">Voted</span>{% else %}<span class="badge draft">Not voted</span>{% endif %}</td>{% endif %}<td><div class="record-actions">
+      {% if not student.has_voted_open %}<a class="button secondary small-button" href="{% url 'student-edit' student.pk %}">Edit</a>{% else %}<span class="muted small-text">Locked: voted in open election</span>{% endif %}
+      {% if student.is_active and selected_election %}<form method="post" action="{% url 'student-eligibility' student.pk %}" onsubmit="return confirm('{% if student.has_voted %}Disable this learner? Their anonymous ballot and vote totals will remain unchanged.{% else %}Disable this learner from voting in all elections?{% endif %}');">{% csrf_token %}<input type="hidden" name="action" value="disable"><input type="hidden" name="election" value="{{ selected_election.pk }}"><input type="hidden" name="q" value="{{ query }}"><button class="button danger small-button" type="submit">Disable</button></form>
+      {% elif not student.is_active %}<form method="post" action="{% url 'student-eligibility' student.pk %}">{% csrf_token %}<input type="hidden" name="action" value="enable"><input type="hidden" name="election" value="{{ selected_election.pk }}"><input type="hidden" name="q" value="{{ query }}"><button class="button secondary small-button" type="submit">Enable</button></form>{% endif %}
+    </div></td></tr>{% endfor %}
+    </tbody></table></div>
+    {% if total > 100 %}<p class="table-footnote">Showing up to 100 records. Use search to find a learner.</p>{% endif %}
+  {% else %}<div class="empty-state"><span class="empty-icon">♙</span><h3>No learners found</h3><p>Import a CSV or Excel file with Admission No., Name, Grade, and Stream.</p><a class="button primary" href="{% url 'student-import' %}">Import learners</a></div>{% endif %}
+</div>
+{% endblock %}

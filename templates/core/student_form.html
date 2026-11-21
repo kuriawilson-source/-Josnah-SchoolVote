@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'students' %}">← Learner roll</a>
+<section class="page-heading"><span class="eyebrow">VOTER ROLL</span><h1>{{ title }}</h1><p>Enter the learner's admission number and school details.</p></section>
+<form method="post" class="card form-card">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  {% for field in form %}
+    <label class="field">{{ field.label }}{{ field }}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}</label>
+  {% endfor %}
+  <div class="form-actions">
+    {% if student %}<button class="button danger" type="submit" form="delete-learner" onclick="return confirm('Remove {{ student.name|escapejs }} from the active learner roll? They will no longer be eligible to vote in any election. Closed-election participation records will be retained.');">Delete learner</button>{% endif %}
+    <a class="button secondary" href="{% url 'students' %}">Cancel</a>
+    <button class="button primary" type="submit">Save learner</button>
+  </div>
+</form>
+{% if student %}
+<form id="delete-learner" method="post" action="{% url 'student-delete' student.pk %}" hidden>
+  {% csrf_token %}
+</form>
+{% endif %}
+{% endblock %}

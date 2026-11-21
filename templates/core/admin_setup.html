@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Set up administrator{% endblock %}
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-note">
+    <span class="eyebrow">ONE-TIME LOCAL SETUP</span>
+    <h1>Set up your<br>school admin.</h1>
+    <p>Create the administrator account used to manage elections and learner records.</p>
+  </div>
+  <form method="post" class="card auth-card">
+    {% csrf_token %}
+    <h2>Create administrator</h2>
+    <p class="muted">This setup works only on this computer and is disabled after the first account.</p>
+    {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}
+      <label class="field">{{ field.label }}{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}</label>
+    {% endfor %}
+    <button class="button primary full" type="submit">Create administrator →</button>
+    <p class="fine-print">Choose a unique password and keep it private.</p>
+  </form>
+</section>
+{% endblock %}

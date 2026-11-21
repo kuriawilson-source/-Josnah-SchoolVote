@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Ballot submitted{% endblock %}
+{% block content %}
+<section class="success-wrap card"><span class="success-icon">✓</span><span class="eyebrow">BALLOT RECORDED</span><h1>Thank you for voting.</h1><p>Your ballot for <strong>{{ election.name }}</strong> has been submitted. Your identity is not attached to your selections.</p><a class="button secondary" href="{% url 'vote-home' %}">Return to voting booth</a></section>
+{% endblock %}

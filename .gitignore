@@ -1,0 +1,10 @@
+
+.venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+.env
+staticfiles/
+*.log
+config/settings_backup.py
+test-output.txt

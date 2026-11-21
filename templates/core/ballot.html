@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Official voting{% endblock %}
+{% block content %}
+<section class="voter-intro official-heading">
+  <h1>Josnah Primary and Junior School Electoral Commission</h1>
+  <span class="eyebrow">{{ election.name }} · OFFICIAL VOTING</span>
+  <p>Please select the learner's preferred candidate for each position.</p>
+</section>
+<div class="learner-banner">
+  <strong>Welcome, {{ student.name|upper }}</strong>
+  <span>Grade: {{ student.grade }} <b>·</b> Stream: {{ student.stream }} <b>·</b> Adm: {{ student.admission_no }}</span>
+</div>
+<form method="post" class="ballot-form official-ballot">{% csrf_token %}
+  {% for position in positions %}
+    <fieldset class="card ballot-position"><legend><span class="position-number">0{{ forloop.counter }}</span>{{ position.name }}</legend>
+      {% for candidate in position.candidates.all %}{% if candidate.is_active %}<label class="candidate-option"><input type="radio" name="position_{{ position.pk }}" value="{{ candidate.pk }}">{% if candidate.passport_photo %}<img class="candidate-photo" src="{{ candidate.passport_photo.url }}" alt="Photo of {{ candidate.name }}">{% else %}<span class="avatar">No Photo</span>{% endif %}<span class="candidate-copy"><strong>{{ candidate.name|upper }}</strong>{% if candidate.slogan %}<small>{{ candidate.slogan }}</small>{% endif %}</span><span class="radio-mark"></span></label>{% endif %}{% endfor %}
+    </fieldset>
+  {% endfor %}
+  <div class="ballot-submit"><span>Confirm the learner's selections before submitting. A submitted ballot cannot be changed.</span><button class="button primary" type="submit" name="cast_ballot" value="1">Submit ballot <span aria-hidden="true">→</span></button></div>
+</form>
+{% endblock %}
