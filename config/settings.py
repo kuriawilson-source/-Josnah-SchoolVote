@@ -126,4 +126,3 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
     SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
-
