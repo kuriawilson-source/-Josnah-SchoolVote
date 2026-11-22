@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, migration_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -41,4 +41,5 @@ urlpatterns = [
     path("elections/<int:election_id>/candidate-vote-ranking.pdf", views.ranked_candidate_report, name="ranked-candidate-report"),
     path("vote/", views.vote_home, name="vote-home"),
     path("vote/<int:election_id>/", views.vote, name="vote"),
+    path("admin/data-migration/", migration_views.migration_upload, name="migration-upload"),
 ]
