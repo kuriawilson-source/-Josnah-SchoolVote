@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Election results{% endblock %}
+{% block content %}
+<section class="page-heading heading-row no-print">
+  <div><span class="eyebrow">OFFICIAL RESULTS</span><h1>Election results</h1><p>Candidate rankings organized by elective post.</p></div>
+  {% if elections %}
+    <form method="get" class="election-filter">
+      <label for="election">Election</label>
+      <select id="election" name="election" onchange="this.form.submit()">
+        {% for option in elections %}<option value="{{ option.pk }}" {% if election.pk == option.pk %}selected{% endif %}>{{ option.name }} — {{ option.get_status_display }}</option>{% endfor %}
+      </select>
+    </form>
+  {% endif %}
+</section>
+{% if election %}
+  <section class="page-heading heading-row">
+    <div><span class="eyebrow">RESULTS · {{ election.get_status_display|upper }}</span><h1>{{ election.name }}</h1><p>{{ ballot_count }} learner ballot{{ ballot_count|pluralize }} submitted.</p></div>
+    {% if election.status == "closed" %}
+      <div class="button-row print-actions no-print">
+        <button class="button primary" type="button" onclick="window.print()">Print results</button>
+        <a class="button secondary" href="{% url 'ranked-candidate-report' election.pk %}" target="_blank" rel="noopener">Print PDF</a>
+        <a class="button secondary" href="{% url 'results-xlsx' election.pk %}">Download Excel</a>
+      </div>
+    {% endif %}
+  </section>
+
+  {% for position in position_rows %}
+    <section class="card results-position">
+      <div class="results-position-heading"><h2>{{ position.name }}</h2><span class="count-pill">{{ position.candidates|length }} candidate{{ position.candidates|length|pluralize }}</span></div>
+      <div class="table-scroll">
+        <table class="rank-table">
+          <thead><tr><th>Rank</th><th>Candidate</th><th class="rank-votes">Votes</th></tr></thead>
+          <tbody>
+            {% for candidate in position.candidates %}
+              <tr><td class="rank-number">{{ forloop.counter }}</td><td><strong>{{ candidate.name }}</strong></td><td class="rank-votes"><strong>{{ candidate.votes }}</strong></td></tr>
+            {% empty %}
+              <tr><td colspan="3">No candidates for this position.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% empty %}
+    <div class="card empty-state"><h2>No positions available</h2><p>Add positions and candidates to this election.</p></div>
+  {% endfor %}
+{% else %}
+  <div class="card empty-state"><span class="empty-icon">◷</span><h2>No elections available</h2><p>Create an election and record votes before viewing results.</p></div>
+{% endif %}
+{% endblock %}

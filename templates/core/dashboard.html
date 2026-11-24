@@ -3,7 +3,7 @@
 {% block content %}
 <section class="page-heading heading-row">
   <div><span class="eyebrow">OVERVIEW</span><h1>{{ dashboard_title }}</h1><p>Welcome, {{ request.user.get_short_name|default:request.user.username }}. Here's your school's voting at a glance.</p></div>
-  <a class="button primary" href="{% url 'election-create' %}">＋ New election</a>
+  <div class="button-row heading-actions"><a class="button secondary" href="{% url 'admin-results' %}">View &amp; print results</a><a class="button primary" href="{% url 'election-create' %}">＋ New election</a></div>
 </section>
 <section class="stats-grid">
   <article class="stat-card"><span class="stat-icon green">♙</span><div><span class="stat-label">Eligible learners</span><strong>{{ student_count }}</strong></div></article>

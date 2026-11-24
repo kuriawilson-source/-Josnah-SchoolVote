@@ -1,5 +1,4 @@
 from django.urls import path
-
 from . import views, migration_views
 
 urlpatterns = [
@@ -16,6 +15,7 @@ urlpatterns = [
     path("setup/", views.admin_setup, name="admin-setup"),
     path("logout/", views.admin_logout, name="admin-logout"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("admin/results/", views.admin_results, name="admin-results"),
     path("officials/", views.officials, name="officials"),
     path("officials/<int:official_id>/edit/", views.official_edit, name="official-edit"),
     path("officials/<int:official_id>/reset-password/", views.official_reset_password, name="official-reset-password"),

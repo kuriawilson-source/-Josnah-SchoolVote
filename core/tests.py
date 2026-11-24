@@ -505,6 +505,7 @@ class SchoolVoteFlowTests(TestCase):
         dashboard_response = self.client.get("/dashboard/")
         self.assertEqual(dashboard_response.status_code, 200)
         self.assertContains(dashboard_response, "Student Council")
+        self.assertContains(dashboard_response, "View &amp; print results")
         self.assertEqual(self.client.get(f"/elections/{self.election.pk}/").status_code, 200)
         self.assertContains(self.client.get(f"/elections/{self.election.pk}/"), "President")
 
@@ -576,6 +577,14 @@ class SchoolVoteFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertIn("inline;", response["Content-Disposition"])
+
+        admin_results = self.client.get("/admin/results/")
+        self.assertEqual(admin_results.status_code, 200)
+        self.assertContains(admin_results, "Candidate rankings organized by elective post")
+        self.assertContains(admin_results, "President")
+        self.assertContains(admin_results, "Sam Candidate")
+        self.assertContains(admin_results, "Lee Candidate")
+        self.assertContains(admin_results, "No Vote Candidate")
 
         detail = self.client.get(f"/elections/{self.election.pk}/")
         self.assertContains(detail, "Print candidate vote ranking")

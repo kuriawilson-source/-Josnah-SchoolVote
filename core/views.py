@@ -253,6 +253,53 @@ def dashboard(request):
 
 
 @staff_required
+def admin_results(request):
+    elections = Election.objects.prefetch_related("positions__candidates").order_by("-created_at")
+    election_id = request.GET.get("election")
+    election = (
+        elections.filter(pk=election_id).first()
+        if election_id
+        else elections.filter(status=Election.Status.CLOSED).first()
+        or elections.first()
+    )
+    if election is None:
+        return render(
+            request,
+            "core/admin_results.html",
+            {"elections": elections, "election": None, "position_rows": []},
+        )
+
+    votes_by_candidate = dict(
+        Vote.objects.filter(ballot__election=election)
+        .values("candidate_id")
+        .annotate(vote_count=Count("pk"))
+        .values_list("candidate_id", "vote_count")
+    )
+    position_rows = []
+    for position in election.positions.all():
+        candidates = [
+            {
+                "name": candidate.name,
+                "votes": votes_by_candidate.get(candidate.pk, 0),
+            }
+            for candidate in position.candidates.all()
+        ]
+        candidates.sort(key=lambda candidate: (-candidate["votes"], candidate["name"].casefold()))
+        position_rows.append({"name": position.name, "candidates": candidates})
+
+    return render(
+        request,
+        "core/admin_results.html",
+        {
+            "elections": elections,
+            "election": election,
+            "position_rows": position_rows,
+            "ballot_count": Participation.objects.filter(election=election).count(),
+        },
+    )
+
+
+@staff_required
 def officials(request):
     if request.method == "POST":
         form = ElectoralOfficialForm(request.POST)
@@ -1038,6 +1085,12 @@ def results_pdf(request, election_id):
 @staff_required
 def ranked_candidate_report(request, election_id):
     election = _closed_election_or_404(election_id)
+    votes_by_candidate = dict(
+        Vote.objects.filter(ballot__election=election)
+        .values("candidate_id")
+        .annotate(vote_count=Count("pk"))
+        .values_list("candidate_id", "vote_count")
+    )
     output = io.BytesIO()
     document = SimpleDocTemplate(
         output, pagesize=A4, rightMargin=18 * mm, leftMargin=18 * mm
@@ -1054,31 +1107,37 @@ def ranked_candidate_report(request, election_id):
         ),
         Spacer(1, 8 * mm),
     ]
-    data = [["Rank", "Position", "Candidate", "Votes"]]
-    data.extend(
-        [[rank, position, candidate, votes]
-         for rank, (position, candidate, votes) in enumerate(
-             _ranked_candidate_rows(election), start=1
-         )]
-    )
-    table = Table(data, repeatRows=1, colWidths=[18 * mm, 52 * mm, 85 * mm, 20 * mm])
-    table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#253f35")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#d8dfd9")),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f4f7f4")]),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN", (0, 1), (0, -1), "CENTER"),
-                ("ALIGN", (-1, 1), (-1, -1), "CENTER"),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-                ("TOPPADDING", (0, 0), (-1, -1), 7),
-            ]
+    for position in election.positions.prefetch_related("candidates").all():
+        candidates = [
+            (candidate.name, votes_by_candidate.get(candidate.pk, 0))
+            for candidate in position.candidates.all()
+        ]
+        candidates.sort(key=lambda candidate: (-candidate[1], candidate[0].casefold()))
+        story.append(Paragraph(escape(position.name), styles["Heading3"]))
+        data = [["Rank", "Candidate", "Votes"]]
+        data.extend(
+            [[rank, candidate_name, votes]
+             for rank, (candidate_name, votes) in enumerate(candidates, start=1)]
         )
-    )
-    story.append(table)
+        table = Table(data, repeatRows=1, colWidths=[24 * mm, 128 * mm, 24 * mm])
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#253f35")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#d8dfd9")),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f4f7f4")]),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("ALIGN", (0, 1), (0, -1), "CENTER"),
+                    ("ALIGN", (-1, 1), (-1, -1), "CENTER"),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                    ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ]
+            )
+        )
+        story.append(table)
+        story.append(Spacer(1, 7 * mm))
     document.build(story)
     response = HttpResponse(output.getvalue(), content_type="application/pdf")
     response["Content-Disposition"] = (
